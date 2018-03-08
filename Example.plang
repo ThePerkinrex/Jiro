@@ -1,0 +1,15 @@
+global test = "Variables!"
+print("Hello PercScript")
+print("This is a print statement")
+print("1")
+print("2")
+print(3)
+print("4")
+print(plang)
+print("")
+printHelloFunctionsTo(test)
+
+func printHelloFunctionsTo(who){
+    print("Functions say hello to")
+    print(who)
+}
