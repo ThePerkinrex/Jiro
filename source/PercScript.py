@@ -35,4 +35,4 @@ else:
         Utils.ps_help(invokeName)
     else:
         p = PSParser.Parser()
-        p.parse(open(args[0]).readlines(),True)
+        p.parse(open(args[0]).readlines(), True)
