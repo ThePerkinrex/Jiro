@@ -2,8 +2,12 @@ import Utils
 
 class Token:
     elements = None
+    linetext = ''
+    line = 0
 
-    def __init__(self, elements):
+    def __init__(self, elements, linetext, line):
+        self.linetext = linetext
+        self.line = line
         if(type(elements) == type([])):
             assignee = self.check(elements)
             self.elements = assignee
@@ -24,6 +28,9 @@ class Token:
     def check(self, elements):
         pass
 
+    def rawvalue(self):
+        return str(self.value())
+
     def value(self):
         return self.elements
 
@@ -31,12 +38,25 @@ class Token:
 class Plus(Token):
     def check(self, elements):
         if len(elements) > 1:
-            i1 = Utils.tokenize(str(elements[0]))
-            i2 = Utils.tokenize(str(elements[1]))
+            i1 = Utils.tokenize(str(elements[0]), self.linetext, self.line)
+            i2 = Utils.tokenize(str(elements[1]), self.linetext, self.line)
 
-            return [i1, i2]
+            if type(i1.value()) == type(i2.value()):
+                if type(i1.value()) == bool:
+                    return [i1, i2]
+                else:
+                    Utils.error('Can\'t add boolean elements', self.linetext, self.line)
+            else:
+                Utils.error('Can\'t add two elements of diferent types', self.linetext, self.line)
         else:
             raise ValueError('Elements is smaller than 2')
+
+    def rawvalue(self):
+        val = self.value()
+        if type(val) == str:
+            return '"' + val + '"'
+        else:
+            return val
 
     def value(self):
         r = 0
@@ -68,6 +88,9 @@ class Str(Token):
         else:
             raise ValueError('Elements is empty')
 
+    def rawvalue(self):
+        return '"' + self.value() + '"'
+
     def value(self):
         return self.elements
 
@@ -91,6 +114,19 @@ class Bool(Token):
 class And(Token):
     def check(self, elements):
         if len(elements) > 1:
+            i1 = Utils.tokenize(str(elements[0]), self.linetext, self.line)
+            i2 = Utils.tokenize(str(elements[1]), self.linetext, self.line)
+
+            return [i1, i2]
+        else:
+            raise ValueError('Elements is smaller than 2')
+
+    def value(self):
+        return self.elements[0].value() and self.elements[1].value()
+
+class Equal(Token):
+    def check(self, elements):
+        if len(elements) > 1:
             i1 = Utils.tokenize(str(elements[0]))
             i2 = Utils.tokenize(str(elements[1]))
 
@@ -99,7 +135,7 @@ class And(Token):
             raise ValueError('Elements is smaller than 2')
 
     def value(self):
-        return self.elements[0].value() and self.elements[1].value()
+        return self.elements[0].value() == self.elements[1].value()
 
 class Parenthesis(Token):
     def check(self, elements):
@@ -112,16 +148,20 @@ class Parenthesis(Token):
         return self.elements.value()
 
 
-num_literal_regex = '(\d+(.\d*)?)'
+num_literal_regex = '(-?\d+(\.\d*)?)'
 str_literal_regex = '["\'](.*)["\']'
 plus_literal_regex = '(\S+) *\+ *(\S+)'
 parents_literal_regex = '\((.+)\)'
 bool_literal_regex = '([Tt]rue|[Ff]alse)'
+and_literal_regex = '(\S+) *&& *(\S+)'
+equal_literal_regex = '(\S+) *== *(\S+)'
 
 valid_token_literals = [
     (plus_literal_regex, Plus),
     (num_literal_regex, Num),
     (str_literal_regex, Str),
     (bool_literal_regex, Bool),
-    (parents_literal_regex, Parenthesis)
+    (parents_literal_regex, Parenthesis),
+    (and_literal_regex, And),
+    (equal_literal_regex, Equal)
 ]

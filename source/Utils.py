@@ -1,5 +1,9 @@
 import re
+import Tokens
 
+
+var_id = '^[A-Za-z_]\w*$'
+var_id_mid = '[A-Za-z_]\w*'
 
 class LogColors:
     HEADER = '\033[95m'
@@ -14,6 +18,17 @@ class LogColors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def psinit():
+    print(LogColors.SETUP + "\n\n ################### - WELCOME TO - ###################")
+    print(" #                                                    #")
+    print(" #   ____               ____            _       _     #")
+    print(" #  |  _ \ ___ _ __ ___/ ___|  ___ _ __(_)_ __ | |_   #")
+    print(" #  | |_) / _ \ '__/ __\___ \ / __| '__| | '_ \| __|  #")
+    print(" #  |  __/  __/ | | (__ ___) | (__| |  | | |_) | |_   #")
+    print(" #  |_|   \___|_|  \___|____/ \___|_|  |_| .__/ \__|  #")
+    print(" #                                       |_|          #")
+    print(" #                                                    #")
+    print(" ######################################################\n\n" + LogColors.ENDC)
 
 def listtostring(mylist):
     r = "["
@@ -37,6 +52,13 @@ def error(name, text, line):
     print("line " + str(line) + LogColors.ENDC)
     quit(1)
 
+def log(verbose, *text):
+    if verbose:
+        r = ''
+        for t in text:
+            r += str(t) + ' '
+        print(r)
+
 
 def call_native(name, args):
     # print("Native func " + name + " getting called with args " + str(args))
@@ -58,5 +80,18 @@ def val_to_ps(val):
         return str(val)
 
 
-def tokenize(s):
-    pass
+def tokenize(s: str, text, line, parser=None):
+    t = None
+    if parser:
+        m = re.search(var_id_mid, s)
+        if m:
+            s = s.replace(m.group(0), '"' + m.group(0) + '"')
+    for token in Tokens.valid_token_literals:
+        m = re.search('^' + token[0] + '$', s)
+
+        if m:
+            t = token[1](m.groups(), text, line)
+            break
+    if t is None:
+        error(str(s) + ' is not a valid token', text, line)
+    return t

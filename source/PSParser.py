@@ -2,6 +2,11 @@
 import re
 
 import Utils
+from Utils import log
+from Utils import error
+from Utils import var_id
+
+import Tokens
 
 
 class Parser:
@@ -14,8 +19,9 @@ class Parser:
     values = ["PercScript for Perk!"]  # Variable values
     script = []  # The script to run
 
-    def __init__(self):
-        print("PercScript Parser V" + self.V + "\n\n\n")
+    def __init__(self, verbose):
+        self.verbose = verbose
+        log(self.verbose, "PercScript Parser V" + self.V + "\n\n\n")
 
 # V ----FUNCTIONS---- V
 
@@ -31,7 +37,7 @@ class Parser:
             m = re.search('func\s+(\w+)\s*\((.*?)\)\s*{', line)
             if m:
                 if finding_end:
-                    Utils.error("Cannot declare a function inside another function", self.script[i], i + 1)
+                    error("Cannot declare a function inside another function", self.script[i], i + 1)
                 start = i
                 finding_end = True
                 blocks.append(m.group(0).rstrip('{'))
@@ -43,7 +49,7 @@ class Parser:
             m = re.search('}', line)
             if m:
                 popped = blocks.pop(len(blocks)-1)
-                print("FUNC REGISTRATION: End for " + popped + " found")
+                log(self.verbose, "FUNC REGISTRATION: End for " + popped + " found")
                 if len(blocks) == 0:
                     finding_end = False
                     m = re.search('func\s+(\w+)\s*\((.*?)\)\s*', popped)
@@ -53,7 +59,7 @@ class Parser:
                         self.functions.append((m.groups(0)[0], len(args)))
                         self.arguments.append(args)
                         self.codes.append(('script', start, i))
-        print("FUNC REGISTRATION ENDED\n\n\n\n\n\n\n")
+        log(self.verbose, "FUNC REGISTRATION ENDED\n\n\n\n\n\n\n")
 
     def register_var(self, name, value, line):  # Find variables and their values
         self.variables.append(name)
@@ -72,32 +78,38 @@ class Parser:
         return self.values[self.variables.index(name)]
 
     def get_type(self, val, line):  # Get a variable's type
-        m = re.search('^[A-Za-z_]\w*$', val)
+        m = re.search(var_id, val)
         if m:
             # print('A variable!')
             if val in self.variables:
-                return self.get_type(Utils.val_to_ps(self.getval(val)), line)
+                return self.get_type(Utils.val_to_ps(self.getval(val)), line, self)
             else:
-                Utils.error(val + " is not a registered variable", self.script[line - 1], line)
+                error(val + " is not a registered variable", self.script[line - 1], line)
         if not m:
-            m = re.search('^\d+(.\d+)?$', val)
+            m = Utils.tokenize(val, self.script[line - 1], line)
             if m:
                 # print("A number")
-                return 'num'
+                # return 'num'
+                if type(m) == Tokens.Num:
+                    return 'num'
+                elif type(m) == Tokens.Str:
+                    return 'str'
+                elif type(m) in [Tokens.Bool, Tokens.And, Tokens.Equal]:
+                    return 'bool'
+        # if not m:
+        #     m = re.search('^".*?"$', val)
+        #     if m:
+        #         # print("A string")
+        #         return 'str'
         if not m:
-            m = re.search('^".*?"$', val)
-            if m:
-                # print("A string")
-                return 'str'
-        if not m:
-            Utils.error(val + " is not a registered variable", self.script[line - 1], line)
+            error(val + " is not a registered variable", self.script[line - 1], line)
 
     def detect_val(self, val, line, localvar=None, localval=None):  # Get a variable's value or infer the texts type and return it's value
         if localval is None:
             localval = []
         if localvar is None:
             localvar = []
-        m = re.search('^[A-Za-z_]\w*$', val)
+        m = re.search(var_id, val)
         if m:
             # Variable: get it's value
             if val in self.variables:
@@ -105,20 +117,25 @@ class Parser:
             elif val in localvar:
                 return localval[localvar.index(val)]
             else:
-                Utils.error(val + " is not a registered variable", self.script[line-1], line)
+                error(val + " is not a registered variable", self.script[line-1], line)
         if not m:
+            m = Utils.tokenize(val, self.script[line - 1], line, self)
+            if m:
+                # print("A number")
+                # return 'num'
+                return m.value()
             # Not a variable: infer it's type and return it's value
-            m = re.search('^\d+$', val)
-            if m:
+            #m = re.search('^\d+$', val)
+            #if m:
                 # Number (num)
-                return int(val)
+            #    return int(val)
+        # if not m:
+        #     m = re.search('^".*?"$', val)
+        #     if m:
+        #         # String (str)
+        #         return val.strip('"')
         if not m:
-            m = re.search('^".*?"$', val)
-            if m:
-                # String (str)
-                return val.strip('"')
-        if not m:
-            Utils.error(val + " is not a registered variable", self.script[line-1], line)
+            error(val + " is not a registered variable", self.script[line-1], line)
 
     def ps_function(self, name, args):  # Parse a function call
         # print("calling function " + name + " with arguments " + str(args))
@@ -141,7 +158,7 @@ class Parser:
             func = str(self.script[line - 1].strip('\n'))
             for arg in args:
                 func = func.replace(arg, self.get_type(arg, line))
-            Utils.error("The function " + func + " is not registered",
+            error("The function " + func + " is not registered",
                         self.script[line - 1].strip('\n'), line)
 
     def parse(self, myscript, isSplit):  # Parse the main script
@@ -189,7 +206,7 @@ class Parser:
                         m = re.search('if\s*\((.*?)\){', line)
                         if m:
                             if finding_end:
-                                Utils.error("Cannot declare a function inside an if block", self.script[i], i + 1)
+                                error("Cannot declare a function inside an if block", self.script[i], i + 1)
                             start = i
                             finding_end = True
                             blocks.append(m.group(0).rstrip('{'))
@@ -210,4 +227,3 @@ class Parser:
                                     self.functions.append((m.groups(0)[0], len(args)))
                                     self.arguments.append(args)
                                     self.codes.append(('script', start, i))
-
