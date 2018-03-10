@@ -76,21 +76,46 @@ def replace_regex(base: str, regex: str, replacing: str):
 def val_to_ps(val):
     if type(val) == str:
         return str('"' + val + '"')
-    elif type(val) == int:
+    elif type(val) == float:
         return str(val)
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
-def tokenize(s: str, text, line, parser=None):
+
+def tokenize(s: str, text, line, localvar, localval, parser=None):
     t = None
-    if parser:
+    s = s.strip()
+    print(localvar, localval)
+    # print(s)
+
+    #if parser:
+    if True:
         m = re.search(var_id_mid, s)
+        # print(m)
         if m:
-            s = s.replace(m.group(0), '"' + m.group(0) + '"')
+            # print(m.group(0))
+            if parser and m.group(0) in parser.variables:
+                s = s.replace(m.group(0), val_to_ps(parser.getval(m.group(0))))
+
+            if m.group(0) in localvar:
+                val = localval[localvar.index(m.group(0))]
+                print(m.group(0), localvar, val)
+                s = s.replace(m.group(0), val_to_ps(val))
+    print('TOKEN:', s)
     for token in Tokens.valid_token_literals:
         m = re.search('^' + token[0] + '$', s)
-
         if m:
-            t = token[1](m.groups(), text, line)
+            if ' ' in m.groups():
+                error(str(s) + ' is not a valid token', text, line)
+            l = list(m.groups())
+            #print(l)
+            t = token[1](l, text, line, localvar, localval)
+            #print(t)
             break
     if t is None:
         error(str(s) + ' is not a valid token', text, line)

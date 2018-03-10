@@ -28,5 +28,8 @@ else:
         if '-v' in args:
             Utils.psinit()
             verbose = True
+            print(args)
+            args.remove('-v')
+            print(args)
         p = PSParser.Parser(verbose)
         p.parse(open(args[0]).readlines(), True)

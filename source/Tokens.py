@@ -5,9 +5,11 @@ class Token:
     linetext = ''
     line = 0
 
-    def __init__(self, elements, linetext, line):
+    def __init__(self, elements, linetext, line, localvar, localval):
         self.linetext = linetext
         self.line = line
+        self.localvar = localvar
+        self.localval = localval
         if(type(elements) == type([])):
             assignee = self.check(elements)
             self.elements = assignee
@@ -38,11 +40,11 @@ class Token:
 class Plus(Token):
     def check(self, elements):
         if len(elements) > 1:
-            i1 = Utils.tokenize(str(elements[0]), self.linetext, self.line)
-            i2 = Utils.tokenize(str(elements[1]), self.linetext, self.line)
+            i1 = Utils.tokenize(str(elements[0]), self.linetext, self.line, self.localvar, self.localval)
+            i2 = Utils.tokenize(str(elements[1]), self.linetext, self.line, self.localvar, self.localval)
 
             if type(i1.value()) == type(i2.value()):
-                if type(i1.value()) == bool:
+                if type(i1.value()) != bool:
                     return [i1, i2]
                 else:
                     Utils.error('Can\'t add boolean elements', self.linetext, self.line)
@@ -59,7 +61,7 @@ class Plus(Token):
             return val
 
     def value(self):
-        r = 0
+        r = type(self.elements[0].value())()
         for e in self.elements:
             r += e.value()
         return r
@@ -70,10 +72,10 @@ class Num(Token):
     def check(self, elements):
         if len(elements) > 0:
             i = str(elements[0])
-            if i.isalnum():
+            if Utils.is_number(i):
                 return float(i)
             else:
-                raise ValueError('Input string is not of type num ("' + i + '")')
+                raise ValueError('Input string is not of type num (' + i + '): ' + str(i.isdecimal()))
         else:
             raise ValueError('Elements is empty')
 
@@ -114,8 +116,8 @@ class Bool(Token):
 class And(Token):
     def check(self, elements):
         if len(elements) > 1:
-            i1 = Utils.tokenize(str(elements[0]), self.linetext, self.line)
-            i2 = Utils.tokenize(str(elements[1]), self.linetext, self.line)
+            i1 = Utils.tokenize(str(elements[0]), self.linetext, self.line, self.localvar, self.localval)
+            i2 = Utils.tokenize(str(elements[1]), self.linetext, self.line, self.localvar, self.localval)
 
             return [i1, i2]
         else:
@@ -127,8 +129,8 @@ class And(Token):
 class Equal(Token):
     def check(self, elements):
         if len(elements) > 1:
-            i1 = Utils.tokenize(str(elements[0]))
-            i2 = Utils.tokenize(str(elements[1]))
+            i1 = Utils.tokenize(str(elements[0]), self.linetext, self.line, self.localvar, self.localval)
+            i2 = Utils.tokenize(str(elements[1]), self.linetext, self.line, self.localvar, self.localval)
 
             return [i1, i2]
         else:
@@ -140,7 +142,7 @@ class Equal(Token):
 class Parenthesis(Token):
     def check(self, elements):
         if len(elements) > 0:
-            return Utils.tokenize(elements[0])
+            return Utils.tokenize(elements[0], self.linetext, self.line, self.localvar, self.localval)
         else:
             raise ValueError('Elements is empty')
 
@@ -150,11 +152,11 @@ class Parenthesis(Token):
 
 num_literal_regex = '(-?\d+(\.\d*)?)'
 str_literal_regex = '["\'](.*)["\']'
-plus_literal_regex = '(\S+) *\+ *(\S+)'
+plus_literal_regex = '(.+)? *\+ *(.+)'
 parents_literal_regex = '\((.+)\)'
 bool_literal_regex = '([Tt]rue|[Ff]alse)'
 and_literal_regex = '(\S+) *&& *(\S+)'
-equal_literal_regex = '(\S+) *== *(\S+)'
+equal_literal_regex = '(.+)? *== *(.+)'
 
 valid_token_literals = [
     (plus_literal_regex, Plus),

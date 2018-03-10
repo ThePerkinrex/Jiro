@@ -105,6 +105,7 @@ class Parser:
             error(val + " is not a registered variable", self.script[line - 1], line)
 
     def detect_val(self, val, line, localvar=None, localval=None):  # Get a variable's value or infer the texts type and return it's value
+        print(line, localvar, localval)
         if localval is None:
             localval = []
         if localvar is None:
@@ -119,7 +120,7 @@ class Parser:
             else:
                 error(val + " is not a registered variable", self.script[line-1], line)
         if not m:
-            m = Utils.tokenize(val, self.script[line - 1], line, self)
+            m = Utils.tokenize(val, self.script[line - 1], line, localvar, localval, self)
             if m:
                 # print("A number")
                 # return 'num'
@@ -180,6 +181,7 @@ class Parser:
             i = toParse.index(line)
             inside = False
             for func in self.codes:
+                log(self.verbose, func)
                 if func[1] < i < func[2]:
                     inside = True
                     break
