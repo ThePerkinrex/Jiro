@@ -32,8 +32,9 @@ class Parser:
         blocks = []
         finding_end = False
         start = None
-        for line in toRegister:
-            i = toRegister.index(line)
+        #for line in toRegister:
+        for i in range(len(toRegister)):
+            line = toRegister[i]
             m = re.search('func\s+(\w+)\s*\((.*?)\)\s*{', line)
             if m:
                 if finding_end:
@@ -59,7 +60,11 @@ class Parser:
                         self.functions.append((m.groups(0)[0], len(args)))
                         self.arguments.append(args)
                         self.codes.append(('script', start, i))
-        log(self.verbose, "FUNC REGISTRATION ENDED\n\n\n\n\n\n\n")
+        log(self.verbose, "FUNC REGISTRATION ENDED")
+        log(self.verbose, "FUNCS ",self.functions, self.arguments, self.codes)
+        log(self.verbose, "SCRIPT:")
+        Utils.print_script(log, self.verbose, self.script)
+        log(self.verbose, "\n" * 10)
 
     def register_var(self, name, value, line):  # Find variables and their values
         self.variables.append(name)
@@ -77,25 +82,28 @@ class Parser:
     def getval(self, name):  # Get a variable's value
         return self.values[self.variables.index(name)]
 
-    def get_type(self, val, line):  # Get a variable's type
+    def get_type(self, val, line, localvar, localval):  # Get a variable's type
         m = re.search(var_id, val)
         if m:
             # print('A variable!')
             if val in self.variables:
-                return self.get_type(Utils.val_to_ps(self.getval(val)), line, self)
+                return self.get_type(Utils.val_to_ps(self.getval(val)), line, localvar, localval)
             else:
                 error(val + " is not a registered variable", self.script[line - 1], line)
         if not m:
-            m = Utils.tokenize(val, self.script[line - 1], line)
-            if m:
-                # print("A number")
-                # return 'num'
-                if type(m) == Tokens.Num:
-                    return 'num'
-                elif type(m) == Tokens.Str:
-                    return 'str'
-                elif type(m) in [Tokens.Bool, Tokens.And, Tokens.Equal]:
-                    return 'bool'
+            if val != "":
+                m = Utils.tokenize(val, self.script[line - 1], line, localvar, localval)
+                if m:
+                    # print("A number")
+                    # return 'num'
+                    if type(m) == Tokens.Num:
+                        return 'num'
+                    elif type(m) == Tokens.Str:
+                        return 'str'
+                    elif type(m) in [Tokens.Bool, Tokens.And, Tokens.Equal]:
+                        return 'bool'
+            else:
+                return None
         # if not m:
         #     m = re.search('^".*?"$', val)
         #     if m:
@@ -105,7 +113,7 @@ class Parser:
             error(val + " is not a registered variable", self.script[line - 1], line)
 
     def detect_val(self, val, line, localvar=None, localval=None):  # Get a variable's value or infer the texts type and return it's value
-        print(line, localvar, localval)
+        log(self.verbose, line, localvar, localval)
         if localval is None:
             localval = []
         if localvar is None:
@@ -119,12 +127,14 @@ class Parser:
                 return localval[localvar.index(val)]
             else:
                 error(val + " is not a registered variable", self.script[line-1], line)
-        if not m:
+        if not m and val != "":
             m = Utils.tokenize(val, self.script[line - 1], line, localvar, localval, self)
             if m:
                 # print("A number")
                 # return 'num'
                 return m.value()
+        if val == "":
+            return None
             # Not a variable: infer it's type and return it's value
             #m = re.search('^\d+$', val)
             #if m:
@@ -139,7 +149,7 @@ class Parser:
             error(val + " is not a registered variable", self.script[line-1], line)
 
     def ps_function(self, name, args):  # Parse a function call
-        # print("calling function " + name + " with arguments " + str(args))
+        log(self.verbose, "calling function " + name + " with arguments " + str(args))
         code = self.getcode(name, args)
         if code[0].startswith("perc.lang"):
             Utils.call_native(name, args)
@@ -154,11 +164,12 @@ class Parser:
             for arg in args:
                 arg = arg.strip(' ')
                 argspass.append(self.detect_val(arg, line, localvar, localval))
+            #print(line, name, argspass, '->')
             self.ps_function(name, argspass)
         else:
             func = str(self.script[line - 1].strip('\n'))
             for arg in args:
-                func = func.replace(arg, self.get_type(arg, line))
+                func = func.replace(arg, self.get_type(arg, line, localvar, localval))
             error("The function " + func + " is not registered",
                         self.script[line - 1].strip('\n'), line)
 
@@ -177,18 +188,31 @@ class Parser:
             localvalues = []
         if localvariables is None:
             localvariables = []
+        #print(localvariables, localvalues)
         for line in toParse:
             i = toParse.index(line)
             inside = False
+            #print("PARSING", line)
             for func in self.codes:
                 log(self.verbose, func)
                 if func[1] < i < func[2]:
                     inside = True
                     break
-            if not inside:
+            if inside:
+                if not isMain:
+                    #print("LINE", line)
+                    m = re.search('(\w+?)\((.*?)\)$', line)
+                    if m:
+                        #print(m.groups())
+                        #print("CALLING:", m.groups(0)[0])
+                        self.function_call(m.groups(0)[0], re.split(',\s*', m.groups(0)[1]), i, localvariables, localvalues)
+            else:
                 # Match a function
+                #print("LINE", line)
                 m = re.search('(\w+?)\((.*?)\)$', line)
                 if m:
+                    #print(m.groups())
+                    #print("CALLING:", m.groups(0)[0])
                     self.function_call(m.groups(0)[0], re.split(',\s*', m.groups(0)[1]), i, localvariables, localvalues)
                 # Match a global variable declaration
                 regex = '(global\s+)?(\w+)\s*=\s*(".*"|\d+|\w+)$'

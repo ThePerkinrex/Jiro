@@ -37,6 +37,11 @@ def listtostring(mylist):
     r = r.rstrip(",") + "]"
     return r
 
+def print_script(printfunc, verbose, script):
+    for i in range(len(script)):
+        line = script[i]
+        printfunc(verbose, str(i) + ':\t', line.strip('\n'))
+
 
 def ps_help(invokeName):
     print("------------| PercScript Help |------------")
@@ -90,10 +95,11 @@ def is_number(s):
 def tokenize(s: str, text, line, localvar, localval, parser=None):
     t = None
     s = s.strip()
-    print(localvar, localval)
     # print(s)
-
-    #if parser:
+    verbose = False
+    if parser:
+        verbose = parser.verbose
+    log(verbose, localvar, localval)
     if True:
         m = re.search(var_id_mid, s)
         # print(m)
@@ -104,9 +110,9 @@ def tokenize(s: str, text, line, localvar, localval, parser=None):
 
             if m.group(0) in localvar:
                 val = localval[localvar.index(m.group(0))]
-                print(m.group(0), localvar, val)
+                log(verbose, m.group(0), localvar, val)
                 s = s.replace(m.group(0), val_to_ps(val))
-    print('TOKEN:', s)
+    log(verbose, 'TOKEN:', s)
     for token in Tokens.valid_token_literals:
         m = re.search('^' + token[0] + '$', s)
         if m:
