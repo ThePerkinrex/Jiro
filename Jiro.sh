@@ -1,5 +1,5 @@
-if [ "`stat source/PercScript.py | grep -o x`" == "" ]; then
-  chmod +x source/PercScript.py
+if [ "`stat source/Jiro.py | grep -o x`" == "" ]; then
+  chmod +x source/Jiro.py
 fi
 
-./source/PercScript.py "$@"
+./source/Jiro.py "$@"

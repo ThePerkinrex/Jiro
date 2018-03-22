@@ -7,7 +7,7 @@ func add(a, b){
 }
 
 global test = "Variables!"
-print("Hello PercScript")
+print("Hello Jiro")
 print("This is a print statement")
 print("1")
 print("2")
