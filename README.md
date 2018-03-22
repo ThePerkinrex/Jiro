@@ -1,4 +1,4 @@
-# <img src="PercScript.png" height=25>Jiro
+# <img src="Jiro.png" height=25>Jiro
 
 https://theperkinrex.github.io/percscript/
 
