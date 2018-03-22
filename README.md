@@ -1,5 +1,5 @@
-# <img src="PercScript.png" height=25>PercScript
+# <img src="PercScript.png" height=25>Jiro
 
 https://theperkinrex.github.io/percscript/
 
-A scripting language for PercOS and more
+A programming language for PercOS and more
