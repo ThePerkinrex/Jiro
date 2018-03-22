@@ -1,5 +1,7 @@
-if [ "`stat source/Jiro.py | grep -o x`" == "" ]; then
-  chmod +x source/Jiro.py
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+echo $SCRIPTPATH
+if [ "`stat $SCRIPTPATH/source/Jiro.py | grep -o x`" == "" ]; then
+  chmod +x $SCRIPTPATH/source/Jiro.py
 fi
 
-./source/Jiro.py "$@"
+.$SCRIPTPATH/source/Jiro.py "$@"
