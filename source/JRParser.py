@@ -1,4 +1,4 @@
-# Jiro Parser V1.1.1
+# Jiro Parser v1.1.1
 import re
 
 import Utils
