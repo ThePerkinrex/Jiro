@@ -1,3 +1,4 @@
+p = `pwd`
 if [ "`whoami`" != "root" ]; then
 	echo "You're not running this as root, please enter the password to run as root"
 	sudo echo ""
@@ -26,8 +27,6 @@ if [ ! -d "/usr/local/jiro"  ]; then
 	echo "Creating the directory"
 	sudo mkdir -p /usr/local/jiro/bin
 	echo "Adding it to the path"
-	echo "" >> ~/.bash_profile
-	echo "" >> ~/.bash_profile
 	echo "# Jiro path" >> ~/.bash_profile
 	echo "export PATH=\"/usr/local/jiro/bin:\$PATH\"" >> ~/.bash_profile
 fi
