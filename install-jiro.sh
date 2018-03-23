@@ -3,25 +3,27 @@ if [ "`whoami`" != "root" ]; then
 	echo "You're not running this as root, please enter the password to run as root"
 	sudo echo ""
 fi
+version=`curl -sS https://api.github.com/repos/theperkinrex/jiro/releases/latest | grep -oiE "\"tag_name\": \"v\d+\.\d+\.\d+\"" | grep -oiE "v\d+\.\d+\.\d+"`
 
+echo "Installing Jiro $version"
 mkdir tmp
 cd tmp
 echo "Downloading Jiro launcher"
-curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/master/jiro.sh" -o jiro
+curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/$version/jiro.sh" -o jiro
 chmod +x jiro
 echo "Downloading Jiro.py"
 mkdir source
-curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/master/source/Jiro.py" -o source/Jiro.py
+curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/$version/source/Jiro.py" -o source/Jiro.py
 echo "Downloading JRParser.py"
-curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/master/source/JRParser.py" -o source/JRParser.py
+curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/$version/source/JRParser.py" -o source/JRParser.py
 echo "Downloading Tokens.py"
-curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/master/source/Tokens.py" -o source/Tokens.py
+curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/$version/source/Tokens.py" -o source/Tokens.py
 echo "Downloading Utils.py"
-curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/master/source/Utils.py" -o source/Utils.py
+curl "https://raw.githubusercontent.com/ThePerkinrex/Jiro/$version/source/Utils.py" -o source/Utils.py
 echo ""
 echo ""
 # echo "Installing Jiro into /usr/local/jiro/bin"
-echo "It may ask for permission to copy files into there"
+# echo "It may ask for permission to copy files into there"
 cd ..
 if [ ! -d "/usr/local/jiro"  ]; then
 	echo "Creating the directory"
@@ -29,6 +31,8 @@ if [ ! -d "/usr/local/jiro"  ]; then
 	echo "Adding it to the path"
 	echo "# Jiro path" >> ~/.bash_profile
 	echo "export PATH=\"/usr/local/jiro/bin:\$PATH\"" >> ~/.bash_profile
+else
+	echo "Updating Jiro"
 fi
 echo "Copying"
 sudo cp -a tmp/* /usr/local/jiro/bin
