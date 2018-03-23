@@ -1,4 +1,4 @@
-# Jiro Parser V1.1.0-alpha
+# Jiro Parser V1.1.0
 import re
 
 import Utils
@@ -10,7 +10,7 @@ import Tokens
 
 
 class Parser:
-    V = "1.1.0-alpha"
+    V = "1.1.0"
 
     functions = [("print", 1)]  # Function names and nº of args
     arguments = [['toPrint']]  # Function arguments names
