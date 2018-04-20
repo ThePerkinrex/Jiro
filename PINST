@@ -1,0 +1,6 @@
+# Jiro PINST file
+
+project-name: jiro
+main-file: jiro.sh
+src-dir: source
+files-to-download: JRParser.py Jiro.py Tokens.py Utils.py
