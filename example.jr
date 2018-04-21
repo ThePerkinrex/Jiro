@@ -7,16 +7,17 @@ func add(a, b){
 }
 
 global test = "Variables!"
+value = 4
 print("Hello Jiro")
 print("This is a print statement")
 print("1")
 print("2")
 print(3)
 print("4")
-print(jr)
+print("hsua")
 print("")
 printHelloFunctionsTo(test)
 add(3, 5)
-print(3 == 5)
+print(value)
 
 print("END")
